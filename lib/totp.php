@@ -77,7 +77,13 @@ namespace OTPHP {
     public function verify($otp, $timestamp = null) {
       if($timestamp === null)
         $timestamp = time();
-      return ($otp == $this->at($timestamp));
+
+      $window = 30;
+      foreach (array(0, $window, -$window) as $t) 
+	if($otp == $this->at($timestamp + $t))
+	  return true;
+      
+      return false;
     }
 
     /**
