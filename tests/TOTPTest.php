@@ -1,53 +1,83 @@
 <?php
-/*
- * Copyright (c) 2011 Le Lag 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+namespace OTPHP;
 
-require_once dirname(__FILE__).'/../lib/otphp.php';
+class TOTPTest extends \PHPUnit_Framework_TestCase
+{
+    private $otp;
+    public function setUp()
+    {
+        $this->otp = $this->getMockBuilder('OTPHP\TOTP')
+            ->setMethods(array('getSecret', 'getDigits', 'getDigest', 'getIssuer', 'getLabel', 'isIssuerIncludedAsParameter', 'getInterval'))
+            ->getMock();
 
-class TOPTTest extends PHPUnit_Framework_TestCase {
+        $this->otp->expects($this->any())
+            ->method('getLabel')
+            ->will($this->returnValue('alice@foo.bar'));
 
-  public function test_it_has_an_interval() {
-    $o = new \OTPHP\TOTP('JDDK4U6G3BJLEZ7Y');
-    $this->assertEquals(30,$o->interval);
-    $b = new \OTPHP\TOTP('JDDK4U6G3BJLEZ7Y', Array('interval'=>60));
-    $this->assertEquals(60,$b->interval);
-  }
+        $this->otp->expects($this->any())
+            ->method('getSecret')
+            ->will($this->returnValue('JDDK4U6G3BJLEZ7Y'));
 
-  public function test_it_gets_the_good_code_at_given_times() {
-    $o = new \OTPHP\TOTP('JDDK4U6G3BJLEZ7Y');
-    $this->assertEquals(855783,$o->at(0));
-    $this->assertEquals(762124,$o->at(319690800));
-    $this->assertEquals(139664,$o->at(1301012137));
-  }
+        $this->otp->expects($this->any())
+            ->method('getIssuer')
+            ->will($this->returnValue('My Project'));
 
-  public function test_it_verify_the_code() {
-    $o = new \OTPHP\TOTP('JDDK4U6G3BJLEZ7Y');
-    $this->assertTrue($o->verify(855783, 0));
-    $this->assertTrue($o->verify(762124, 319690800));
-    $this->assertTrue($o->verify(139664, 1301012137));
-  }
+        $this->otp->expects($this->any())
+            ->method('getDigest')
+            ->will($this->returnValue('sha1'));
 
-  public function test_it_returns_the_provisioning_uri() {
-    $o = new \OTPHP\TOTP('JDDK4U6G3BJLEZ7Y');
-    $this->assertEquals("otpauth://totp/name?secret=JDDK4U6G3BJLEZ7Y",
-      $o->provisioning_uri('name'));
-  }
+        $this->otp->expects($this->any())
+            ->method('getDigits')
+            ->will($this->returnValue(6));
+
+        $this->otp->expects($this->any())
+            ->method('getInterval')
+            ->will($this->returnValue(30));
+    }
+
+    public function testGetProvisioningUri()
+    {
+        $this->assertEquals('otpauth://totp/My%20Project%3Aalice%40foo.bar?algorithm=sha1&digits=6&period=30&secret=JDDK4U6G3BJLEZ7Y', $this->otp->getProvisioningUri());
+    }
+
+    public function testGenerateOtpAt()
+    {
+        $this->assertEquals(855783, $this->otp->at(0));
+        $this->assertEquals(762124, $this->otp->at(319690800));
+        $this->assertEquals(139664, $this->otp->at(1301012137));
+    }
+
+    public function testGenerateOtpNow()
+    {
+        $this->assertEquals($this->otp->now(), $this->otp->at(time()));
+    }
+
+    public function testVerifyOtpNow()
+    {
+        $totp = $this->otp->at(time());
+        $this->assertTrue($this->otp->verify($totp));
+    }
+
+    public function testVerifyOtp()
+    {
+        $this->assertTrue($this->otp->verify(855783, 0));
+        $this->assertTrue($this->otp->verify(762124, 319690800));
+        $this->assertTrue($this->otp->verify(139664, 1301012137));
+
+        $this->assertFalse($this->otp->verify(139664, 1301012107));
+        $this->assertFalse($this->otp->verify(139664, 1301012167));
+        $this->assertFalse($this->otp->verify(139664, 1301012197));
+    }
+
+    public function testVerifyOtpInWindow()
+    {
+        $this->assertFalse($this->otp->verify(54409, 319690800, 10)); // -11 intervals
+        $this->assertTrue($this->otp->verify(808167, 319690800, 10)); // -10 intervals
+        $this->assertTrue($this->otp->verify(364393, 319690800, 10)); // -9 intervals
+        $this->assertTrue($this->otp->verify(762124, 319690800, 10)); // 0 intervals
+        $this->assertTrue($this->otp->verify(988451, 319690800, 10)); // +9 intervals
+        $this->assertTrue($this->otp->verify(789387, 319690800, 10)); // +10 intervals
+        $this->assertFalse($this->otp->verify(465009, 319690800, 10)); // +11 intervals
+    }
 }

@@ -1,0 +1,34 @@
+{
+    "name": "spomky-labs/otphp",
+    "type": "library",
+    "description": "PHP OTP Library compatible with Google Authenticator",
+    "license": "MIT",
+    "keywords": ["otp", "hotp", "totp"],
+    "homepage": "https://github.com/Spomky-Labs/otphp",
+    "authors": [
+        {
+            "name": "Spomky-Labs",
+            "homepage": "https://github.com/Spomky-Labs/otphp/contributors"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2",
+        "christian-riesen/base32": "~1.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.*"
+    },
+    "suggest": {
+    },
+    "autoload": {
+        "psr-4": { "OTPHP\\": "lib/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "OTPHP\\": "tests/" }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "3.1.x-dev"
+        }
+    }
+}
