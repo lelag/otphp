@@ -6,6 +6,8 @@ This is compatible with Google Authenticator apps available for Android and iPho
 
 This is a port of the rotp ruby library available at https://github.com/mdp/rotp
 
+Note : This project has not been updated since it was created. If you need a PHP OTP library, you should check out the great fork by Spomky-Labs at https://github.com/Spomky-Labs/otphp which has been improved and is currently maintained.
+
 
 ## Quick overview of using One Time Passwords on your phone
 
