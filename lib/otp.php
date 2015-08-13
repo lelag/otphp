@@ -78,7 +78,7 @@ class OTP {
      * timestamp (see TOTP class).
      * @return integer the one-time password 
      */
-    public function generateOTP($input) {
+    public function generateOTP($input,$g2f = false) {
       $hash = hash_hmac($this->digest, $this->intToBytestring($input), $this->byteSecret());
       foreach(str_split($hash, 2) as $hex) { // stupid PHP has bin2hex but no hex2bin WTF
         $hmac[] = hexdec($hex);
@@ -88,7 +88,14 @@ class OTP {
         ($hmac[$offset + 1] & 0xFF) << 16 |
         ($hmac[$offset + 2] & 0xFF) << 8 |
         ($hmac[$offset + 3] & 0xFF);
+      if($g2f) return $this->normalizeOTP($code % pow(10, $this->digits));
       return $code % pow(10, $this->digits);
+    }
+    /*
+    Add initial zeros for match with Google Authenticator App
+    */
+    public function normalizeOTP($otp){
+        return str_pad($otp,6,"0",STR_PAD_LEFT);
     }
 
     /**
