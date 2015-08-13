@@ -41,8 +41,8 @@ namespace OTPHP {
      *  seed the hmac hash function.
      *  @return integer the One Time Password
      */
-    public function at($count) {
-      return $this->generateOTP($count);
+    public function at($count,$g2f=false) {
+      return $this->generateOTP($count,$g2f);
     }
 
 

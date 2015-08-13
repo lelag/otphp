@@ -54,8 +54,8 @@ namespace OTPHP {
      *  used to seed the hmac hash function.
      *  @return integer the One Time Password
      */
-    public function at($timestamp) {
-      return $this->generateOTP($this->timecode($timestamp));
+    public function at($timestamp,$g2f = false) {
+      return $this->generateOTP($this->timecode($timestamp),$g2f);
     }
 
     /**
@@ -63,8 +63,8 @@ namespace OTPHP {
      *
      *  @return integer the current One Time Password
      */
-    public function now() {
-      return $this->generateOTP($this->timecode(time()));
+    public function now($g2f = false) {
+      return $this->generateOTP($this->timecode(time()),$g2f);
     }
 
     /**
